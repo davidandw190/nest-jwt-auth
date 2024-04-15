@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsEmail, Matches } from 'class-validator';
 
-export class LoginPayloadDTO {
+export class RegisterPayloadDTO {
   @IsNotEmpty({ message: 'First Name cannot be empty' })
   firstName: string;
 

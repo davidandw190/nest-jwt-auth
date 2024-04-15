@@ -22,7 +22,7 @@ export class PrismaService
     await this.$disconnect();
   }
 
-  async cleanDb() {
+  async cleanDB() {
     if (process.env.NODE_ENV === 'prod') return;
 
     return Promise.all([this.user.deleteMany()]);
