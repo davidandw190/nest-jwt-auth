@@ -3,12 +3,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RegisterPayloadDTO } from './dto/register.payload.dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { Tokens } from './types/tokens.type';
 
 @Injectable()
 export class AuthService {
   constructor(private prisma: PrismaService) {}
 
-  async register(registerPayload: RegisterPayloadDTO): Promise<any> {
+  async register(registerPayload: RegisterPayloadDTO): Promise<Tokens> {
     // const hash = await argon.hash(dto.password);
 
     const registeredUser = await this.prisma.user
