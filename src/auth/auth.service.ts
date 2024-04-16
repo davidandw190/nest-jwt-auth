@@ -32,12 +32,19 @@ export class AuthService {
         throw error;
       });
 
-    // TODO
+    const tokens = await this.getTokens(
+      registeredUser.id,
+      registeredUser.email,
+      registeredUser.firstName,
+      registeredUser.lastName,
+    );
+
+    await this.updateRefreshTokenHash(registeredUser.id, tokens.refreshToken);
 
     return registeredUser;
   }
 
-  async getTokens(
+  private async getTokens(
     userId: number,
     email: string,
     firstName: string,
@@ -62,6 +69,19 @@ export class AuthService {
     ]);
 
     return { accessToken, refreshToken };
+  }
+
+  private async updateRefreshTokenHash(userId: number, refreshToken: string) {
+    const hash = await this.hashData(refreshToken);
+
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        hashedRefreshToken: hash,
+      },
+    });
   }
 
   private hashData(data: string) {
