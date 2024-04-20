@@ -19,4 +19,16 @@ export class AuthController {
   login(@Body() loginPayload: LoginPayloadDTO): Promise<Tokens> {
     return this.authService.login(loginPayload);
   }
+
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  refreshTokens(userId: number, refreshToken: string): Promise<Tokens> {
+    return this.authService.refresh(userId, refreshToken);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout(userId: number): Promise<boolean> {
+    return this.authService.logout(userId);
+  }
 }

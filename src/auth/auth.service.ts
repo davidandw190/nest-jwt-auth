@@ -72,6 +72,52 @@ export class AuthService {
     return tokens;
   }
 
+  async refresh(userId: number, currRefreshToken: string): Promise<Tokens> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user || !user.hashedRefreshToken) {
+      throw new ForbiddenException('Invalid refresh token');
+    }
+    const tokenMatches = await argon2.verify(
+      user.hashedRefreshToken,
+      currRefreshToken,
+    );
+    if (!tokenMatches) {
+      throw new ForbiddenException('Invalid refresh token');
+    }
+
+    const newTokens: Tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      user.firstName,
+      user.lastName,
+    );
+
+    await this.updateRefreshTokenHash(userId, newTokens.refreshToken);
+
+    return newTokens;
+  }
+
+  async logout(userId: number): Promise<boolean> {
+    await this.prisma.user.updateMany({
+      where: {
+        id: userId,
+        hashedRefreshToken: {
+          not: null,
+        },
+      },
+      data: {
+        hashedRefreshToken: null,
+      },
+    });
+
+    return true;
+  }
+
   private async generateTokens(
     userId: number,
     email: string,
