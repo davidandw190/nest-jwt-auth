@@ -1,11 +1,13 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterPayloadDTO } from './dto/register.payload.dto';
-import * as bcrypt from 'bcrypt';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { Tokens } from './types/tokens.type';
 import { JwtService } from '@nestjs/jwt';
 import { TokenPayload } from './types/jwt.token.payload';
+import { LoginPayloadDTO } from './dto/login.payload.dto';
+import argon2 from 'argon2';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -14,8 +16,6 @@ export class AuthService {
   ) {}
 
   async register(registerPayload: RegisterPayloadDTO): Promise<Tokens> {
-    // const hash = await argon.hash(dto.password);
-
     const registeredUser = await this.prisma.user
       .create({
         data: {
@@ -42,6 +42,34 @@ export class AuthService {
     await this.updateRefreshTokenHash(registeredUser.id, tokens.refreshToken);
 
     return registeredUser;
+  }
+
+  async login(loginPayload: LoginPayloadDTO): Promise<Tokens> {
+    const loggedInUser = await this.prisma.user.findUnique({
+      where: {
+        email: loginPayload.email,
+      },
+    });
+
+    if (!loggedInUser) throw new ForbiddenException('Access Denied');
+
+    const passwordMatches = await argon2.verify(
+      loginPayload.password,
+      loggedInUser.password,
+    );
+
+    if (!passwordMatches) throw new ForbiddenException('Access Denied');
+
+    const tokens = await this.getTokens(
+      loggedInUser.id,
+      loggedInUser.email,
+      loggedInUser.firstName,
+      loggedInUser.lastName,
+    );
+
+    await this.updateRefreshTokenHash(loggedInUser.id, tokens.refreshToken);
+
+    return tokens;
   }
 
   private async getTokens(
@@ -84,7 +112,7 @@ export class AuthService {
     });
   }
 
-  private hashData(data: string) {
-    return bcrypt.hash(data, 10);
+  private async hashData(data: string) {
+    return await argon2.hash(data);
   }
 }
