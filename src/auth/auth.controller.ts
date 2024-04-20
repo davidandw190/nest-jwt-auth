@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import { RegisterPayloadDTO, LoginPayloadDTO } from './dto';
 import { Tokens } from './types';
 import { AccessTokenGuard, RefreshTokenGuard } from 'src/common/guards';
+import { CurrentUser } from 'src/common/decorators/current.user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -30,7 +31,10 @@ export class AuthController {
   @Post('refresh-token')
   @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.OK)
-  refreshTokens(userId: number, refreshToken: string): Promise<Tokens> {
+  refreshTokens(
+    userId: number,
+    @CurrentUser('refreshToken') refreshToken: string,
+  ): Promise<Tokens> {
     return this.authService.refresh(userId, refreshToken);
   }
 
