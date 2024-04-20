@@ -32,7 +32,7 @@ export class AuthService {
         throw error;
       });
 
-    const tokens = await this.getTokens(
+    const tokens = await this.generateTokens(
       registeredUser.id,
       registeredUser.email,
       registeredUser.firstName,
@@ -60,7 +60,7 @@ export class AuthService {
 
     if (!passwordMatches) throw new ForbiddenException('Access Denied');
 
-    const tokens = await this.getTokens(
+    const tokens = await this.generateTokens(
       loggedInUser.id,
       loggedInUser.email,
       loggedInUser.firstName,
@@ -72,7 +72,7 @@ export class AuthService {
     return tokens;
   }
 
-  private async getTokens(
+  private async generateTokens(
     userId: number,
     email: string,
     firstName: string,
@@ -99,7 +99,10 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async updateRefreshTokenHash(userId: number, refreshToken: string) {
+  private async updateRefreshTokenHash(
+    userId: number,
+    refreshToken: string,
+  ): Promise<void> {
     const hash = await this.hashData(refreshToken);
 
     await this.prisma.user.update({
