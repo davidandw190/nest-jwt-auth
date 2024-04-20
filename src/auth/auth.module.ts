@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
+import { TOKEN_ISSUER, TOKEN_SIGN_ALGORITHM } from './constants/auth.constants';
+
+import { AccessTokenStrategy } from './strategies/access.token.strategy';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { AccessTokenStrategy } from './strategies/access.token.strategy';
-import { RefreshTokenStrategy } from './strategies/refresh.token.strategy';
 import { JwtModule } from '@nestjs/jwt';
-import { TOKEN_ISSUER, TOKEN_SIGN_ALGORITHM } from './constants/auth.constants';
+import { Module } from '@nestjs/common';
+import { RefreshTokenStrategy } from './strategies/refresh.token.strategy';
 
 @Module({
   imports: [

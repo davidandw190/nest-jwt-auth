@@ -1,11 +1,11 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
+import { TokenPayload, Tokens } from './types';
+
+import { JwtService } from '@nestjs/jwt';
+import { LoginPayloadDTO } from './dto';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterPayloadDTO } from './dto/register.payload.dto';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { Tokens } from './types/tokens.type';
-import { JwtService } from '@nestjs/jwt';
-import { TokenPayload } from './types/jwt.token.payload';
-import { LoginPayloadDTO } from './dto/login.payload.dto';
 import argon2 from 'argon2';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class AuthService {
     private prisma: PrismaService,
   ) {}
 
-  async register(registerPayload: RegisterPayloadDTO): Promise<Tokens> {
+  async register(registerPayload: RegisterPayloadDTO): Promise<Tsokens> {
     const registeredUser = await this.prisma.user
       .create({
         data: {
