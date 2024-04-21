@@ -9,30 +9,36 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterPayloadDTO, LoginPayloadDTO } from './dto';
 import { Tokens } from './types';
-import { AccessTokenGuard, RefreshTokenGuard } from 'src/common/guards';
-import { FromCurrentUser } from 'src/common/decorators/from-current-user.decorator';
+import { RefreshTokenGuard } from 'src/common/guards';
+import {
+  CurrentUserId,
+  FromCurrentUser,
+  PublicResource,
+} from 'src/common/decorators';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
+  @PublicResource()
   @HttpCode(HttpStatus.CREATED)
   register(@Body() registerPayload: RegisterPayloadDTO): Promise<Tokens> {
     return this.authService.register(registerPayload);
   }
 
   @Post('login')
+  @PublicResource()
   @HttpCode(HttpStatus.OK)
   login(@Body() loginPayload: LoginPayloadDTO): Promise<Tokens> {
     return this.authService.login(loginPayload);
   }
 
   @Post('refresh-token')
-  @UseGuards(AccessTokenGuard)
+  @PublicResource()
   @HttpCode(HttpStatus.OK)
   refreshTokens(
-    userId: number,
+    @CurrentUserId() userId: number,
     @FromCurrentUser('refreshToken') refreshToken: string,
   ): Promise<Tokens> {
     return this.authService.refresh(userId, refreshToken);
@@ -41,7 +47,7 @@ export class AuthController {
   @Post('logout')
   @UseGuards(RefreshTokenGuard)
   @HttpCode(HttpStatus.OK)
-  logout(userId: number): Promise<boolean> {
+  logout(@CurrentUserId() userId: number): Promise<boolean> {
     return this.authService.logout(userId);
   }
 }
