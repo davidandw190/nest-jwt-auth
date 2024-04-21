@@ -1,5 +1,8 @@
 import { TokenPayload } from './jwt.token.payload';
 
+/**
+ * Represents the payload of a refresh token.
+ */
 export class RefreshTokenPayload extends TokenPayload {
   constructor(
     readonly subject: number,

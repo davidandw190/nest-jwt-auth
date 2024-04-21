@@ -8,6 +8,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RegisterPayloadDTO } from './dto/register.payload.dto';
 import argon2 from 'argon2';
 
+/**
+ * Service responsible for authentication-related operations.
+ */
 @Injectable()
 export class AuthService {
   constructor(
@@ -15,7 +18,14 @@ export class AuthService {
     private prisma: PrismaService,
   ) {}
 
-  async register(registerPayload: RegisterPayloadDTO): Promise<Tsokens> {
+  /**
+   * Registers a new user.
+   *
+   * @param registerPayload - Registration information.
+   * @returns Tokens containing access and refresh tokens.
+   * @throws ForbiddenException if registration fails.
+   */
+  async register(registerPayload: RegisterPayloadDTO): Promise<Tokens> {
     const registeredUser = await this.prisma.user
       .create({
         data: {
@@ -26,7 +36,7 @@ export class AuthService {
       .catch((error) => {
         if (error instanceof PrismaClientKnownRequestError) {
           if (error.code === 'P2002') {
-            throw new ForbiddenException('Credentials incorrect');
+            throw new ForbiddenException('Email already exists');
           }
         }
         throw error;
@@ -44,6 +54,13 @@ export class AuthService {
     return registeredUser;
   }
 
+  /**
+   * Logs in a user.
+   *
+   * @param loginPayload - Login credentials.
+   * @returns Tokens containing access and refresh tokens.
+   * @throws ForbiddenException if login fails.
+   */
   async login(loginPayload: LoginPayloadDTO): Promise<Tokens> {
     const loggedInUser = await this.prisma.user.findUnique({
       where: {
@@ -72,6 +89,14 @@ export class AuthService {
     return tokens;
   }
 
+  /**
+   * Refreshes the refresh tokens, persists it, and creates a new access token.
+   *
+   * @param userId - User ID.
+   * @param currRefreshToken - Current refresh token.
+   * @returns New tokens containing access and refresh tokens.
+   * @throws ForbiddenException if refresh fails.
+   */
   async refresh(userId: number, currRefreshToken: string): Promise<Tokens> {
     const user = await this.prisma.user.findUnique({
       where: {
@@ -102,6 +127,12 @@ export class AuthService {
     return newTokens;
   }
 
+  /**
+   * Logs out a user by invalidating refresh token.
+   *
+   * @param userId - User ID.
+   * @returns True if logout is successful.
+   */
   async logout(userId: number): Promise<boolean> {
     await this.prisma.user.updateMany({
       where: {
@@ -118,6 +149,15 @@ export class AuthService {
     return true;
   }
 
+  /**
+   * Generates access and refresh tokens.
+   *
+   * @param userId - User ID.
+   * @param email - User's email.
+   * @param firstName - User's first name.
+   * @param lastName - User's last name.
+   * @returns Tokens containing access and refresh tokens.
+   */
   private async generateTokens(
     userId: number,
     email: string,
@@ -132,10 +172,12 @@ export class AuthService {
     };
 
     const [accessToken, refreshToken] = await Promise.all([
+      // Sign access token
       this.jwtService.signAsync(jwtPayload, {
         secret: process.env.ACCESS_TOKEN_SECRET,
         expiresIn: process.env.ACCESS_TOKEN_TTL,
       }),
+      // Sign refresh token
       this.jwtService.signAsync(jwtPayload, {
         secret: process.env.REFRESH__TOKEN_SECRET,
         expiresIn: process.env.REFRESH_TOKEN_TTL,
@@ -145,6 +187,12 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  /**
+   * Updates refresh token hash for a user.
+   *
+   * @param userId - User ID.
+   * @param refreshToken - Refresh token.
+   */
   private async updateRefreshTokenHash(
     userId: number,
     refreshToken: string,
@@ -161,6 +209,12 @@ export class AuthService {
     });
   }
 
+  /**
+   * Hashes data using argon2.
+   *
+   * @param data - Data to hash.
+   * @returns Hashed data.
+   */
   private async hashData(data: string) {
     return await argon2.hash(data);
   }

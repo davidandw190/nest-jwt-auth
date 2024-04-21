@@ -1,5 +1,8 @@
 import { IsEmail, IsNotEmpty, Matches } from 'class-validator';
 
+/**
+ * DTO (Data Transfer Object) representing the payload for user login.
+ */
 export class LoginPayloadDTO {
   @IsNotEmpty({ message: 'Email cannot be empty' })
   @IsEmail({}, { message: 'Invalid email format' })

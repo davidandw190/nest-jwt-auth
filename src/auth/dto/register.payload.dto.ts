@@ -1,5 +1,8 @@
-import { IsNotEmpty, IsEmail, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, Matches } from 'class-validator';
 
+/**
+ * DTO (Data Transfer Object) representing the payload for user registration.
+ */
 export class RegisterPayloadDTO {
   @IsNotEmpty({ message: 'First Name cannot be empty' })
   firstName: string;
